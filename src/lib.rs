@@ -18,6 +18,7 @@ pub trait Field:
     + Into<f64>
     + PartialEq
     + Copy
+    + Default
 {
 }
 
@@ -37,7 +38,8 @@ impl<
             + Neg<Output = Self>
             + Into<f64>
             + PartialEq
-            + Copy,
+            + Copy
+            + Default,
     > Field for T
 {
 }
@@ -57,28 +59,40 @@ impl<K: Field + Display, const N: usize> Display for Vector<K, N> {
 }
 
 impl<K: Field, const N: usize> Vector<K, N> {
-    pub fn new(data: [K; N]) -> Self {
-        Vector { data }
+    pub fn new(data: &[K; N]) -> Self {
+        Vector { data: data.clone() }
     }
 
-    pub fn add(&mut self, v: Vector<K, N>) {
-        for i in 0..self.data.len() {
-            if let Some(x) = self.data.get_mut(i) {
-                if let Some(y) = v.data.get(i) {
-                    *x = *x + *y;
-                }
-            }
+    pub fn add(self, other: Self) -> Self {
+        let mut result = self;
+        for i in 0..N {
+            result.data[i] += other.data[i];
         }
+        result
     }
 
-    pub fn sub(&mut self, v: Vector<K, N>) {
-        for i in 0..self.data.len() {
-            if let Some(x) = self.data.get_mut(i) {
-                if let Some(y) = v.data.get(i) {
-                    *x = *x - *y;
-                }
-            }
+    pub fn sub(self, other: Self) -> Self {
+        let mut result = self;
+        for i in 0..N {
+            result.data[i] -= other.data[i];
         }
+        result
+    }
+
+    pub fn mul(self, other: Self) -> Self {
+        let mut result = self;
+        for i in 0..N {
+            result.data[i] *= other.data[i];
+        }
+        result
+    }
+
+    pub fn div(self, other: Self) -> Self {
+        let mut result = self;
+        for i in 0..N {
+            result.data[i] /= other.data[i];
+        }
+        result
     }
 
     pub fn scl(&mut self, a: K) {
@@ -86,11 +100,53 @@ impl<K: Field, const N: usize> Vector<K, N> {
             *num *= a;
         }
     }
+
+    pub fn linear_combination(u: &[Vector<K, N>], coefs: &[K]) -> Vector<K, N> {
+        let mut res: [K; N] = [K::default(); N];
+
+        for (x, vec) in u.iter().enumerate() {
+            for (y, num) in vec.data.iter().enumerate() {
+                res[y] += *num * coefs[x];
+            }
+        }
+
+        Vector::from(res)
+    }
 }
 
 impl<K: Field, const N: usize> From<[K; N]> for Vector<K, N> {
     fn from(array: [K; N]) -> Self {
-        Vector::new(array)
+        Vector::new(&array)
+    }
+}
+
+pub fn lerp<V: Field>(u: V, v: V, t: V) -> V {
+    u + (v - u) * t
+}
+
+impl<K: Field, const N: usize> Vector<K, N> {
+    pub fn lerp(u: Vector<K, N>, v: Vector<K, N>, t: K) -> Vector<K, N> {
+        let mut res = [K::default(); N];
+
+        for idx in 0..u.data.len() {
+            res[idx] = u.data[idx] + (v.data[idx] - u.data[idx]) * t;
+        }
+
+        Vector::from(res)
+    }
+}
+
+impl<K: Field, const N: usize> Matrix<K, N> {
+    pub fn lerp(u: Matrix<K, N>, v: Matrix<K, N>, t: K) -> Matrix<K, N> {
+        let mut res = [[K::default(); N]; N];
+
+        for x in 0..u.data.len() {
+            for y in 0..u.data[x].len() {
+                res[x][y] = u.data[x][y] + (v.data[x][y] - u.data[x][y]) * t;
+            }
+        }
+
+        Matrix::from(res)
     }
 }
 
