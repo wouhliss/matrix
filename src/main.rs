@@ -1,14 +1,14 @@
-use matrix::*;
+use matrix::{lerp, matrix::Matrix, vector::Vector};
 
 fn main() {
-    let u = Vector::from([2., 3.]);
+    let mut u = Vector::from([2., 3.]);
     let v = Vector::from([5., 7.]);
     u.add(v);
     println!("{}", u);
     // [7.0]
     // [10.0]
 
-    let u = Vector::from([2., 3.]);
+    let mut u = Vector::from([2., 3.]);
     let v = Vector::from([5., 7.]);
     u.sub(v);
     println!("{}", u);
@@ -59,6 +59,12 @@ fn main() {
     // [10.]
     // [0.]
     // [230.]
+    let m1 = Matrix::from([[0., 2.], [1., 1.]]);
+    let m2 = Matrix::from([[3., 0.], [1., 1.]]);
+
+    println!("{}", Matrix::linear_combination(&[m1, m2], &[2., -1.]));
+    // [-3.0, 4.0]
+    // [1.0, 1.0]
 
     println!("{}", lerp(0., 1., 0.));
     // 0.0
