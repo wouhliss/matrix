@@ -115,6 +115,10 @@ impl<K: Field, const N: usize, const M: usize> Matrix<K, N, M> {
 
         res
     }
+
+    pub fn row_echelon(&self) -> Self {
+        Matrix::new(&[[K::default(); N]; M])
+    }
 }
 
 impl<K: Field, const N: usize> Matrix<K, N, N> {
