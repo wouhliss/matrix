@@ -4,7 +4,7 @@ use crate::traits::Field;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vector<K, const N: usize> {
-    pub data: [K; N],
+    data: [K; N],
 }
 
 impl<K: Field + Display, const N: usize> Display for Vector<K, N> {
@@ -16,9 +16,25 @@ impl<K: Field + Display, const N: usize> Display for Vector<K, N> {
     }
 }
 
+pub fn abs<K: Field>(n: K) -> K {
+    if n >= -n {
+        n
+    } else {
+        -n
+    }
+}
+
 impl<K: Field, const N: usize> Vector<K, N> {
     pub fn new(data: &[K; N]) -> Self {
         Vector { data: data.clone() }
+    }
+
+    pub fn data(&self) -> &[K; N] {
+        &self.data
+    }
+
+    pub fn data_mut(&mut self) -> &mut [K; N] {
+        &mut self.data
     }
 
     pub fn add(&mut self, other: Self) {
@@ -34,53 +50,37 @@ impl<K: Field, const N: usize> Vector<K, N> {
     }
 
     pub fn scl(&mut self, a: K) {
-        for num in self.data.iter_mut() {
-            *num *= a;
-        }
+        self.data.iter_mut().for_each(|num| *num *= a);
     }
 
     pub fn dot(&self, v: Self) -> K {
         let mut res = K::default();
 
-        for (x, num) in self.data.iter().enumerate() {
-            res = num.mul_add(v.data[x], res);
+        for i in 0..N {
+            res = self.data[i].mul_add(v.data[i], res);
         }
 
         res
     }
 
-    pub fn norm_1(self) -> K {
-        let mut res = K::default();
-
-        for x in self.data.iter() {
-            res += if *x >= -*x { *x } else { -*x };
-        }
-
-        res
+    pub fn norm_1(self) -> f64 {
+        self.data
+            .iter()
+            .fold(f64::default(), |res, n| res + abs(*n).into())
     }
 
-    pub fn norm(self) -> f32 {
-        let mut res = K::default();
-
-        for x in self.data.iter() {
-            res = x.mul_add(*x, res);
-        }
-
-        res.into().powf(0.5)
+    pub fn norm(self) -> f64 {
+        self.data
+            .iter()
+            .fold(K::default(), |res, n| n.mul_add(*n, res))
+            .into()
+            .powf(0.5)
     }
 
-    pub fn norm_inf(self) -> K {
-        let mut res = if self.data[0] >= -self.data[0] {
-            self.data[0]
-        } else {
-            -self.data[0]
-        };
-
-        for x in self.data.iter() {
-            res = if *x >= -*x { *x } else { -*x }
-        }
-
-        res
+    pub fn norm_inf(self) -> f64 {
+        self.data
+            .iter()
+            .fold(f64::NEG_INFINITY, |max, &x| abs(x).into().max(max))
     }
 
     pub fn linear_combination(u: &[Self], coefs: &[K]) -> Self {
@@ -105,7 +105,7 @@ impl<K: Field, const N: usize> Vector<K, N> {
         res
     }
 
-    pub fn angle_cos(u: &Self, v: &Self) -> f32 {
+    pub fn angle_cos(u: &Self, v: &Self) -> f64 {
         u.dot(*v).into() / (u.norm() * v.norm())
     }
 }

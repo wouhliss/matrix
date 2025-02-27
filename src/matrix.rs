@@ -4,7 +4,7 @@ use crate::{traits::Field, vector::Vector};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Matrix<K, const N: usize, const M: usize> {
-    pub data: [[K; N]; M],
+    data: [[K; N]; M],
 }
 
 impl<K: Field + Display, const N: usize, const M: usize> Display for Matrix<K, N, M> {
@@ -57,18 +57,18 @@ impl<K: Field, const N: usize, const M: usize> Matrix<K, N, M> {
 
         for y in 0..M {
             for x in 0..N {
-                vec.data[y] = self.data[y][x].mul_add(v.data[x], vec.data[y]);
+                vec.data_mut()[y] = self.data[y][x].mul_add(v.data()[x], vec.data()[y]);
             }
         }
 
         vec
     }
 
-    pub fn mul_mat(self, m: &Matrix<K, M, N>) -> Matrix<K, N, M> {
-        let mut mat = Matrix::<K, N, M>::new(&[[K::default(); N]; M]);
+    pub fn mul_mat<const P: usize>(self, m: &Matrix<K, P, N>) -> Matrix<K, P, M> {
+        let mut mat = Matrix::<K, P, M>::new(&[[K::default(); P]; M]);
 
         for y in 0..M {
-            for x in 0..N {
+            for x in 0..P {
                 for z in 0..N {
                     mat.data[y][x] = self.data[y][z].mul_add(m.data[z][x], mat.data[y][x]);
                 }
@@ -99,6 +99,30 @@ impl<K: Field, const N: usize, const M: usize> Matrix<K, N, M> {
             for y in 0..N {
                 res.data[x][y] = (v.data[x][y] - u.data[x][y]).mul_add(t, u.data[x][y]);
             }
+        }
+
+        res
+    }
+
+    pub fn transpose(&self) -> Matrix<K, M, N> {
+        let mut res = Matrix::new(&[[K::default(); M]; N]);
+
+        for y in 0..N {
+            for x in 0..M {
+                res.data[y][x] = self.data[x][y];
+            }
+        }
+
+        res
+    }
+}
+
+impl<K: Field, const N: usize> Matrix<K, N, N> {
+    pub fn trace(&self) -> K {
+        let mut res = K::default();
+
+        for i in 0..N {
+            res += self.data[i][i];
         }
 
         res

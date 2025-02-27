@@ -23,7 +23,7 @@ pub trait Field:
     + Copy
     + Default
     + One
-    + Into<f32>
+    + Into<f64>
 {
 }
 
@@ -49,7 +49,7 @@ impl<
             + Copy
             + Default
             + One
-            + Into<f32>,
+            + Into<f64>,
     > Field for T
 {
 }
